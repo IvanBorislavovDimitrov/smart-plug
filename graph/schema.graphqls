@@ -1,0 +1,24 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Plug {
+  id: ID!
+  name: String!
+  ipAddress: String!
+  powerToTurnOff: Float!
+}
+
+input NewPlug {
+  name: String!
+  ipAddress: String!
+  powerToTurnOff: Float!
+}
+
+type Query {
+  listPlugs: [Plug!]!
+}
+
+type Mutation {
+  createPlug(input: NewPlug!): Plug!
+}
