@@ -35,14 +35,13 @@ func (ps *PlugService) AddPlug(plug model.NewPlug) (*model.Plug, error) {
 	}
 	log.Println("Last insert ID" + fmt.Sprint(res.LastInsertId()))
 	transaction.Commit()
-	createdPlug := &model.Plug{
+	return &model.Plug{
 		ID:             uuid,
 		Name:           plug.Name,
 		IPAddress:      plug.IPAddress,
 		PowerToTurnOff: plug.PowerToTurnOff,
 		CreatedAt:      fmt.Sprint(now),
-	}
-	return createdPlug, nil
+	}, nil
 }
 
 func (ps *PlugService) ListPlugs(page, perPage int) ([]*model.Plug, error) {
