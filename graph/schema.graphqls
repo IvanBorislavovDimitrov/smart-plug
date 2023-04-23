@@ -17,6 +17,7 @@ input NewPlug {
 }
 
 type Query {
+  # TODO: add a wrapper to show number of pages...
   listPlugs(page: Int, perPage: Int): [Plug!]!
 }
 

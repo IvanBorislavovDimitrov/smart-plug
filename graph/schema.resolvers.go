@@ -12,7 +12,7 @@ import (
 
 // CreatePlug is the resolver for the createPlug field.
 func (r *mutationResolver) CreatePlug(ctx context.Context, input model.NewPlug) (*model.Plug, error) {
-	return r.plugService.AddPlug(input)
+	return r.plugService.AddPlug(context.Background(), input)
 }
 
 // ListPlugs is the resolver for the listPlugs field.
@@ -25,7 +25,7 @@ func (r *queryResolver) ListPlugs(ctx context.Context, page *int, perPage *int) 
 	if perPage != nil {
 		caclPerPage = *perPage
 	}
-	return r.plugService.ListPlugs(calcPage, caclPerPage)
+	return r.plugService.ListPlugs(context.Background(), calcPage, caclPerPage)
 }
 
 // Mutation returns MutationResolver implementation.

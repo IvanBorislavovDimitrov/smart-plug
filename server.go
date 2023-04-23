@@ -1,12 +1,12 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"log"
 	"net/http"
 	"os"
 
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -22,12 +22,12 @@ func main() {
 	if port == "" {
 		port = defaultPort
 	}
-	db, err := sql.Open("postgres", connStr)
+	conn, err := pgx.Connect(context.Background(), connStr)
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
-	resolver := graph.NewResolver(service.NewPlugService(db))
+	defer conn.Close(context.Background())
+	resolver := graph.NewResolver(service.NewPlugService(conn))
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/graphql/plugs"))
