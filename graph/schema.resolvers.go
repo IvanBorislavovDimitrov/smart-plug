@@ -13,7 +13,7 @@ import (
 
 // CreatePlug is the resolver for the createPlug field.
 func (r *mutationResolver) CreatePlug(ctx context.Context, input model.NewPlug) (*model.Plug, error) {
-	panic(fmt.Errorf("not implemented: CreatePlug - createPlug"))
+	return r.plugService.AddPlug(input)
 }
 
 // ListPlugs is the resolver for the listPlugs field.
