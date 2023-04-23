@@ -13,4 +13,5 @@ type Plug struct {
 	Name           string  `json:"name"`
 	IPAddress      string  `json:"ipAddress"`
 	PowerToTurnOff float64 `json:"powerToTurnOff"`
+	CreatedAt      string  `json:"createdAt"`
 }

@@ -50,6 +50,7 @@ type ComplexityRoot struct {
 	}
 
 	Plug struct {
+		CreatedAt      func(childComplexity int) int
 		ID             func(childComplexity int) int
 		IPAddress      func(childComplexity int) int
 		Name           func(childComplexity int) int
@@ -57,7 +58,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		ListPlugs func(childComplexity int) int
+		ListPlugs func(childComplexity int, page *int, perPage *int) int
 	}
 }
 
@@ -65,7 +66,7 @@ type MutationResolver interface {
 	CreatePlug(ctx context.Context, input model.NewPlug) (*model.Plug, error)
 }
 type QueryResolver interface {
-	ListPlugs(ctx context.Context) ([]*model.Plug, error)
+	ListPlugs(ctx context.Context, page *int, perPage *int) ([]*model.Plug, error)
 }
 
 type executableSchema struct {
@@ -94,6 +95,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreatePlug(childComplexity, args["input"].(model.NewPlug)), true
+
+	case "Plug.createdAt":
+		if e.complexity.Plug.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Plug.CreatedAt(childComplexity), true
 
 	case "Plug.id":
 		if e.complexity.Plug.ID == nil {
@@ -128,7 +136,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.ListPlugs(childComplexity), true
+		args, err := ec.field_Query_listPlugs_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ListPlugs(childComplexity, args["page"].(*int), args["perPage"].(*int)), true
 
 	}
 	return 0, false
@@ -248,6 +261,30 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_listPlugs_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["page"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["page"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["perPage"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perPage"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["perPage"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field___Type_enumValues_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -333,6 +370,8 @@ func (ec *executionContext) fieldContext_Mutation_createPlug(ctx context.Context
 				return ec.fieldContext_Plug_ipAddress(ctx, field)
 			case "powerToTurnOff":
 				return ec.fieldContext_Plug_powerToTurnOff(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Plug_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Plug", field.Name)
 		},
@@ -527,6 +566,50 @@ func (ec *executionContext) fieldContext_Plug_powerToTurnOff(ctx context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Plug_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Plug) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Plug_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Plug_createdAt(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Plug",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_listPlugs(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_listPlugs(ctx, field)
 	if err != nil {
@@ -541,7 +624,7 @@ func (ec *executionContext) _Query_listPlugs(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ListPlugs(rctx)
+		return ec.resolvers.Query().ListPlugs(rctx, fc.Args["page"].(*int), fc.Args["perPage"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -574,9 +657,22 @@ func (ec *executionContext) fieldContext_Query_listPlugs(ctx context.Context, fi
 				return ec.fieldContext_Plug_ipAddress(ctx, field)
 			case "powerToTurnOff":
 				return ec.fieldContext_Plug_powerToTurnOff(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Plug_createdAt(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Plug", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_listPlugs_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -2612,6 +2708,13 @@ func (ec *executionContext) _Plug(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "createdAt":
+
+			out.Values[i] = ec._Plug_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3405,6 +3508,22 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	res := graphql.MarshalBoolean(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
 	return res
 }
 

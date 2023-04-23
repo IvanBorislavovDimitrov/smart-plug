@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/IvanBorislavovDimitrov/smart-charger/graph/model"
 )
@@ -17,8 +16,16 @@ func (r *mutationResolver) CreatePlug(ctx context.Context, input model.NewPlug) 
 }
 
 // ListPlugs is the resolver for the listPlugs field.
-func (r *queryResolver) ListPlugs(ctx context.Context) ([]*model.Plug, error) {
-	panic(fmt.Errorf("not implemented: ListPlugs - listPlugs"))
+func (r *queryResolver) ListPlugs(ctx context.Context, page *int, perPage *int) ([]*model.Plug, error) {
+	calcPage := 1
+	caclPerPage := 10
+	if page != nil {
+		calcPage = *page
+	}
+	if perPage != nil {
+		caclPerPage = *perPage
+	}
+	return r.plugService.ListPlugs(calcPage, caclPerPage)
 }
 
 // Mutation returns MutationResolver implementation.

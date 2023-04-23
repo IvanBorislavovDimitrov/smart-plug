@@ -7,6 +7,7 @@ type Plug {
   name: String!
   ipAddress: String!
   powerToTurnOff: Float!
+  createdAt: String!
 }
 
 input NewPlug {
@@ -16,7 +17,7 @@ input NewPlug {
 }
 
 type Query {
-  listPlugs: [Plug!]!
+  listPlugs(page: Int, perPage: Int): [Plug!]!
 }
 
 type Mutation {
