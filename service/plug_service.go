@@ -27,7 +27,7 @@ func (ps *PlugService) AddPlug(ctx context.Context, plug model.NewPlug) (*model.
 		return nil, err
 	}
 	uuid := fmt.Sprint(uuid.New())
-	now := time.Now()
+	now := time.Now().UTC()
 	_, err = transaction.Exec(ctx, "INSERT INTO plugs VALUES ($1, $2, $3, $4, $5)", uuid, plug.Name, plug.IPAddress, plug.PowerToTurnOff, now)
 	if err != nil {
 		transaction.Rollback(ctx)
