@@ -55,6 +55,7 @@ type ComplexityRoot struct {
 		IPAddress      func(childComplexity int) int
 		Name           func(childComplexity int) int
 		PowerToTurnOff func(childComplexity int) int
+		State          func(childComplexity int) int
 	}
 
 	Query struct {
@@ -130,6 +131,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Plug.PowerToTurnOff(childComplexity), true
+
+	case "Plug.state":
+		if e.complexity.Plug.State == nil {
+			break
+		}
+
+		return e.complexity.Plug.State(childComplexity), true
 
 	case "Query.listPlugs":
 		if e.complexity.Query.ListPlugs == nil {
@@ -372,6 +380,8 @@ func (ec *executionContext) fieldContext_Mutation_createPlug(ctx context.Context
 				return ec.fieldContext_Plug_powerToTurnOff(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Plug_createdAt(ctx, field)
+			case "state":
+				return ec.fieldContext_Plug_state(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Plug", field.Name)
 		},
@@ -610,6 +620,50 @@ func (ec *executionContext) fieldContext_Plug_createdAt(ctx context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Plug_state(ctx context.Context, field graphql.CollectedField, obj *model.Plug) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Plug_state(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.State, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Plug_state(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Plug",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_listPlugs(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_listPlugs(ctx, field)
 	if err != nil {
@@ -659,6 +713,8 @@ func (ec *executionContext) fieldContext_Query_listPlugs(ctx context.Context, fi
 				return ec.fieldContext_Plug_powerToTurnOff(ctx, field)
 			case "createdAt":
 				return ec.fieldContext_Plug_createdAt(ctx, field)
+			case "state":
+				return ec.fieldContext_Plug_state(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Plug", field.Name)
 		},
@@ -2711,6 +2767,13 @@ func (ec *executionContext) _Plug(ctx context.Context, sel ast.SelectionSet, obj
 		case "createdAt":
 
 			out.Values[i] = ec._Plug_createdAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "state":
+
+			out.Values[i] = ec._Plug_state(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

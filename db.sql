@@ -3,5 +3,6 @@ CREATE TABLE plugs(
 	name VARCHAR(255) UNIQUE NOT NULL,
 	ip_address VARCHAR(255) UNIQUE NOT NULL,
 	power_to_turn_off DECIMAL NOT NULL,
-	created_at TIMESTAMP NOT NULL
+	created_at TIMESTAMP NOT NULL,
+	state VARCHAR(255) NOT NULL
 )

@@ -55,8 +55,10 @@ func (ps *PowerScheduler) reconcilePlugState(plug *model.Plug, plugChannel chan 
 		log.Println("Could not reconcile state of the plug", err)
 	}
 	log.Println(fmt.Sprintf("Plug with id: %s is consumes power of %f", plug.IPAddress, power))
-	if power <= 0.1 {
+	if power <= plug.PowerToTurnOff {
 		err = plugclient.TurnOffPlug(*plug)
+		plug.State = "OFF"
+		ps.plugService.UpdatePlug(context.Background(), plug)
 		if err != nil {
 			log.Println("Could not reconcile state of the plug", err)
 		}

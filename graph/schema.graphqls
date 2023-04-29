@@ -8,6 +8,7 @@ type Plug {
   ipAddress: String!
   powerToTurnOff: Float!
   createdAt: String!
+  state: String!
 }
 
 input NewPlug {

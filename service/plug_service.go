@@ -28,13 +28,18 @@ func (ps *PlugService) AddPlug(ctx context.Context, plug model.NewPlug) (*model.
 	}
 	uuid := fmt.Sprint(uuid.New())
 	now := time.Now().UTC()
-	_, err = transaction.Exec(ctx, "INSERT INTO plugs VALUES ($1, $2, $3, $4, $5)", uuid, plug.Name, plug.IPAddress, plug.PowerToTurnOff, now)
+	plugState := "OFF"
+	_, err = transaction.Exec(ctx, "INSERT INTO plugs VALUES ($1, $2, $3, $4, $5, $6)", uuid, plug.Name, plug.IPAddress, plug.PowerToTurnOff, now, plugState)
 	if err != nil {
 		transaction.Rollback(ctx)
 		log.Println(err)
 		return nil, err
 	}
-	transaction.Commit(ctx)
+	err = transaction.Commit(ctx)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
 	return &model.Plug{
 		ID:             uuid,
 		Name:           plug.Name,
@@ -44,9 +49,29 @@ func (ps *PlugService) AddPlug(ctx context.Context, plug model.NewPlug) (*model.
 	}, nil
 }
 
+func (ps *PlugService) UpdatePlug(ctx context.Context, plug *model.Plug) error {
+	transaction, err := ps.conn.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	_, err = transaction.Exec(ctx, "UPDATE plugs SET name = $1, ip_address = $2, power_to_turn_off = $3, state = $4 WHERE id = $5",
+		plug.Name, plug.IPAddress, plug.PowerToTurnOff, plug.State, plug.ID)
+	if err != nil {
+		transaction.Rollback(ctx)
+		log.Println(err)
+		return err
+	}
+	err = transaction.Commit(ctx)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
 func (ps *PlugService) ListPlugs(ctx context.Context, page, perPage int) ([]*model.Plug, error) {
 	offset := (page - 1) * perPage
-	rows, err := ps.conn.Query(ctx, "SELECT id, name, ip_address, power_to_turn_off, created_at FROM plugs offset $1 limit $2 ", offset, perPage)
+	rows, err := ps.conn.Query(ctx, "SELECT id, name, ip_address, power_to_turn_off, created_at, state FROM plugs offset $1 limit $2 ", offset, perPage)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -70,7 +95,8 @@ func readPlug(rows pgx.Rows) (*model.Plug, error) {
 	var ipAddress string
 	var createdAt time.Time
 	var powerToTurnOff float64
-	err := rows.Scan(&id, &name, &ipAddress, &powerToTurnOff, &createdAt)
+	var state string
+	err := rows.Scan(&id, &name, &ipAddress, &powerToTurnOff, &createdAt, &state)
 	if err != nil {
 		return nil, err
 	}
@@ -80,5 +106,6 @@ func readPlug(rows pgx.Rows) (*model.Plug, error) {
 		IPAddress:      ipAddress,
 		PowerToTurnOff: powerToTurnOff,
 		CreatedAt:      fmt.Sprint(createdAt),
+		State:          state,
 	}, nil
 }
