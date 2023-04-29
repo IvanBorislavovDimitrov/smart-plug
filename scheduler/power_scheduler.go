@@ -54,7 +54,7 @@ func (ps *PowerScheduler) reconcilePlugsBatch(plugs []*model.Plug) {
 		close(plugChannel)
 	}()
 	for plug := range plugChannel {
-		log.Println("Plug with IP was updated: " + plug.IPAddress)
+		log.Println(fmt.Sprintf("Plug with IP: %s and name: %s was updated, state: %s", plug.IPAddress, plug.Name, plug.State))
 	}
 }
 
@@ -103,7 +103,7 @@ func (ps *PowerScheduler) turnOnPlugsBatch(plugs []*model.Plug) {
 		close(plugChannel)
 	}()
 	for plug := range plugChannel {
-		log.Println(fmt.Sprintf("Plug with name: %s and IP was updated: %s", plug.Name, plug.IPAddress))
+		log.Println(fmt.Sprintf("Plug with IP: %s and name: %s was updated, state: %s", plug.IPAddress, plug.Name, plug.State))
 	}
 }
 
