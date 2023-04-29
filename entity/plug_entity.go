@@ -5,7 +5,6 @@ type PlugEntity struct {
 	Cloud      Cloud      `json:"cloud,omitempty"`
 	Mqtt       Mqtt       `json:"mqtt,omitempty"`
 	Time       string     `json:"time,omitempty"`
-	Unixtime   string     `json:"unixtime,omitempty"`
 	Meters     []Meter    `json:"meters,omitempty"` // Should always be one
 }
 

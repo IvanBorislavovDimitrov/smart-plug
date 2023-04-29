@@ -22,6 +22,7 @@ func NewPowerScheduler(plugService *service.PlugService) *PowerScheduler {
 }
 
 func (ps *PowerScheduler) ReconcilePlugsStates() {
+	log.Println("Reconciliation of the plugs - START")
 	page := 1
 	plugs := ps.listPlugs(page)
 	for len(plugs) != 0 {
@@ -29,6 +30,7 @@ func (ps *PowerScheduler) ReconcilePlugsStates() {
 		page++
 		plugs = ps.listPlugs(page)
 	}
+	log.Println("Reconciliation of the plugs - END")
 }
 
 func (ps *PowerScheduler) listPlugs(page int) []*model.Plug {
@@ -63,8 +65,9 @@ func (ps *PowerScheduler) reconcilePlugState(plug *model.Plug, wg *sync.WaitGrou
 		log.Println("Could not reconcile state of the plug", err)
 		return
 	}
-	log.Println(fmt.Sprintf("Plug with id: %s is consumes power of %f", plug.IPAddress, power))
+	log.Println(fmt.Sprintf("Plug with id: %s is consuming power of %f", plug.IPAddress, power))
 	if power <= plug.PowerToTurnOff {
+		log.Println(fmt.Sprintf("Turning off plug: %s", plug.Name))
 		err = plugclient.TurnOffPlug(*plug)
 		plug.State = "OFF"
 		ps.plugService.UpdatePlug(context.Background(), plug)

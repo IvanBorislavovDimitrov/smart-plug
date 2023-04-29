@@ -35,7 +35,7 @@ func TurnOnPlug(plug model.Plug) error {
 }
 
 func TurnOffPlug(plug model.Plug) error {
-	_, err := HttpClient.Get(plug.IPAddress + "/relay/0?turn=off")
+	_, err := HttpClient.Get("http://" + plug.IPAddress + "/relay/0?turn=off")
 	if err != nil {
 		return err
 	}
