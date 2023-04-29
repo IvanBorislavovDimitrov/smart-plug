@@ -12,7 +12,7 @@ import (
 var HttpClient *http.Client = &http.Client{}
 
 func GetCurrentlyUsedPowerInWatts(plug model.Plug) (float64, error) {
-	resp, err := HttpClient.Get(plug.IPAddress + "/status")
+	resp, err := HttpClient.Get("http://" + plug.IPAddress + "/status")
 	if err != nil {
 		return -1, err
 	}
@@ -27,7 +27,7 @@ func GetCurrentlyUsedPowerInWatts(plug model.Plug) (float64, error) {
 }
 
 func TurnOnPlug(plug model.Plug) error {
-	_, err := HttpClient.Get(plug.IPAddress + "/relay/0?turn=on")
+	_, err := HttpClient.Get("http://" + plug.IPAddress + "/relay/0?turn=on")
 	if err != nil {
 		return err
 	}

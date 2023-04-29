@@ -9,20 +9,28 @@ import (
 	"github.com/IvanBorislavovDimitrov/smart-charger/graph/model"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type PlugService struct {
-	conn *pgx.Conn
+	pool *pgxpool.Pool
 }
 
-func NewPlugService(conn *pgx.Conn) *PlugService {
+func NewPlugService(pool *pgxpool.Pool) *PlugService {
 	return &PlugService{
-		conn: conn,
+		pool: pool,
 	}
 }
 
 func (ps *PlugService) AddPlug(ctx context.Context, plug model.NewPlug) (*model.Plug, error) {
-	transaction, err := ps.conn.Begin(ctx)
+	poolCon, err := ps.pool.Acquire(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	defer poolCon.Release()
+	conn := poolCon.Conn()
+	defer conn.Close(context.Background())
+	transaction, err := conn.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +58,14 @@ func (ps *PlugService) AddPlug(ctx context.Context, plug model.NewPlug) (*model.
 }
 
 func (ps *PlugService) UpdatePlug(ctx context.Context, plug *model.Plug) error {
-	transaction, err := ps.conn.Begin(ctx)
+	poolCon, err := ps.pool.Acquire(context.Background())
+	if err != nil {
+		return err
+	}
+	defer poolCon.Release()
+	conn := poolCon.Conn()
+	defer conn.Close(context.Background())
+	transaction, err := conn.Begin(ctx)
 	if err != nil {
 		return err
 	}
@@ -70,8 +85,15 @@ func (ps *PlugService) UpdatePlug(ctx context.Context, plug *model.Plug) error {
 }
 
 func (ps *PlugService) ListPlugs(ctx context.Context, page, perPage int) ([]*model.Plug, error) {
+	poolCon, err := ps.pool.Acquire(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	defer poolCon.Release()
+	conn := poolCon.Conn()
+	defer conn.Close(context.Background())
 	offset := (page - 1) * perPage
-	rows, err := ps.conn.Query(ctx, "SELECT id, name, ip_address, power_to_turn_off, created_at, state FROM plugs offset $1 limit $2 ", offset, perPage)
+	rows, err := conn.Query(ctx, "SELECT id, name, ip_address, power_to_turn_off, created_at, state FROM plugs offset $1 limit $2 ", offset, perPage)
 	if err != nil {
 		log.Println(err)
 		return nil, err

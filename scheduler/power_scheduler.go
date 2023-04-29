@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/IvanBorislavovDimitrov/smart-charger/graph/model"
 	plugclient "github.com/IvanBorislavovDimitrov/smart-charger/plug_client"
@@ -41,18 +42,26 @@ func (ps *PowerScheduler) listPlugs(page int) []*model.Plug {
 
 func (ps *PowerScheduler) reconcilePlugsBatch(plugs []*model.Plug) {
 	plugChannel := make(chan *model.Plug)
-	for _, plug := range plugs {
-		go ps.reconcilePlugState(plug, plugChannel)
-	}
+	go func() {
+		wg := sync.WaitGroup{}
+		for _, plug := range plugs {
+			wg.Add(1)
+			go ps.reconcilePlugState(plug, &wg, plugChannel)
+		}
+		wg.Wait()
+		close(plugChannel)
+	}()
 	for plug := range plugChannel {
 		log.Println("Plug with IP was updated: " + plug.IPAddress)
 	}
 }
 
-func (ps *PowerScheduler) reconcilePlugState(plug *model.Plug, plugChannel chan *model.Plug) {
+func (ps *PowerScheduler) reconcilePlugState(plug *model.Plug, wg *sync.WaitGroup, plugChannel chan *model.Plug) {
+	defer wg.Done()
 	power, err := plugclient.GetCurrentlyUsedPowerInWatts(*plug)
 	if err != nil {
 		log.Println("Could not reconcile state of the plug", err)
+		return
 	}
 	log.Println(fmt.Sprintf("Plug with id: %s is consumes power of %f", plug.IPAddress, power))
 	if power <= plug.PowerToTurnOff {
@@ -61,17 +70,52 @@ func (ps *PowerScheduler) reconcilePlugState(plug *model.Plug, plugChannel chan 
 		ps.plugService.UpdatePlug(context.Background(), plug)
 		if err != nil {
 			log.Println("Could not reconcile state of the plug", err)
+			return
 		}
 	}
 	plugChannel <- plug
 }
 
 func (ps *PowerScheduler) TurnOnPlugs() {
+	log.Println("Turning on plugs - START")
 	page := 1
 	plugs := ps.listPlugs(page)
 	for len(plugs) != 0 {
-
+		ps.turnOnPlugsBatch(plugs)
 		page++
 		plugs = ps.listPlugs(page)
 	}
+	log.Println("Turning on plugs - END")
+}
+
+func (ps *PowerScheduler) turnOnPlugsBatch(plugs []*model.Plug) {
+	plugChannel := make(chan *model.Plug)
+	go func() {
+		wg := sync.WaitGroup{}
+		for _, plug := range plugs {
+			wg.Add(1)
+			go ps.turnOnPlug(plug, &wg, plugChannel)
+		}
+		wg.Wait()
+		close(plugChannel)
+	}()
+	for plug := range plugChannel {
+		log.Println(fmt.Sprintf("Plug with name: %s and IP was updated: %s", plug.Name, plug.IPAddress))
+	}
+}
+
+func (ps *PowerScheduler) turnOnPlug(plug *model.Plug, wg *sync.WaitGroup, plugChannel chan *model.Plug) {
+	defer wg.Done()
+	err := plugclient.TurnOnPlug(*plug)
+	if err != nil {
+		log.Println("Could not start plug", err)
+		return
+	}
+	plug.State = "ON"
+	err = ps.plugService.UpdatePlug(context.Background(), plug)
+	if err != nil {
+		log.Println("Could not update plug", err)
+		return
+	}
+	plugChannel <- plug
 }

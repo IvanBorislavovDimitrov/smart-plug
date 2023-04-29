@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/go-co-op/gocron"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -25,15 +25,15 @@ func main() {
 	if port == "" {
 		port = defaultPort
 	}
-	conn, err := pgx.Connect(context.Background(), connStr)
+	pool, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
 		panic(err)
 	}
-	defer conn.Close(context.Background())
-	plugService := service.NewPlugService(conn)
+	defer pool.Close()
+	plugService := service.NewPlugService(pool)
 	resolver := graph.NewResolver(plugService)
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
-
+	startPowerScheduler(plugService)
 	http.Handle("/", playground.Handler("GraphQL playground", "/graphql/plugs"))
 	http.Handle("/graphql/plugs", srv)
 
@@ -45,5 +45,7 @@ func startPowerScheduler(plugService *service.PlugService) {
 	powerScheduler := scheduler.NewPowerScheduler(plugService)
 	s := gocron.NewScheduler(time.Local)
 	log.Println("Scheduler was configured for every 12 hours")
-	s.Every(1).Minutes().Do(powerScheduler.ReconcilePlugsStates)
+	// s.Every(1).Minutes().Do(powerScheduler.ReconcilePlugsStates)
+	s.Every(5).Second().Do(powerScheduler.TurnOnPlugs)
+	s.StartAsync()
 }
