@@ -18,7 +18,7 @@ import (
 )
 
 const defaultPort = "8081"
-const connStr = "postgresql://postgres:123@127.0.0.1:5432/smart_plug?sslmode=disable"
+const connStr = "postgresql://postgres:123@postgres_container:5432/smart_plug?sslmode=disable"
 
 func main() {
 	port := os.Getenv("PORT")
