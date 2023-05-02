@@ -62,7 +62,7 @@ func (ps *PowerScheduler) reconcilePlugState(plug *model.Plug, wg *sync.WaitGrou
 	defer wg.Done()
 	power, err := plugclient.GetCurrentlyUsedPowerInWatts(*plug)
 	if err != nil {
-		log.Println("Could not reconcile state of the plug", err)
+		log.Println("Could not reconcile state of the plug. Error getting data!", err)
 		return
 	}
 	log.Println(fmt.Sprintf("Plug with id: %s is consuming power of %f", plug.IPAddress, power))
@@ -72,7 +72,7 @@ func (ps *PowerScheduler) reconcilePlugState(plug *model.Plug, wg *sync.WaitGrou
 		plug.State = "OFF"
 		ps.plugService.UpdatePlug(context.Background(), plug)
 		if err != nil {
-			log.Println("Could not reconcile state of the plug", err)
+			log.Println("Could not reconcile state of the plug. Error updating plug!", err)
 			return
 		}
 	}

@@ -2,9 +2,12 @@ FROM golang:alpine
 
 LABEL maintainer="IvanBorislavovDimitrov"
 
+ENV CONN_STR "postgresql://postgres:123@127.0.0.1:5435/smart_plug?sslmode=disable"
 # Install git.
 # Git is required for fetching the dependencies.
 RUN apk update && apk add --no-cache git && apk add --no-cach bash && apk add build-base
+
+RUN apk update && apk add --no-cache curl
 
 # Setup folders
 RUN mkdir /app

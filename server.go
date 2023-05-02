@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -18,13 +19,18 @@ import (
 )
 
 const defaultPort = "8081"
-const connStr = "postgresql://postgres:123@postgres_container:5432/smart_plug?sslmode=disable"
+const defaultConnStr = "postgresql://postgres:123@localhost:5432/smart_plug?sslmode=disable"
 
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
 	}
+	connStr := os.Getenv("CONN_STR")
+	if connStr == "" {
+		connStr = defaultConnStr
+	}
+	fmt.Println(connStr)
 	pool, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
 		panic(err)
@@ -45,7 +51,7 @@ func startPowerScheduler(plugService *service.PlugService) {
 	powerScheduler := scheduler.NewPowerScheduler(plugService)
 	s := gocron.NewScheduler(time.Local)
 	log.Println("Scheduler was configured for every 12 hours")
-	s.Cron("18 * * * *").Do(powerScheduler.ReconcilePlugsStates)
-	s.Cron("17 * * * *").Do(powerScheduler.TurnOnPlugs)
+	s.Cron("*/5 * * * *").Do(powerScheduler.ReconcilePlugsStates)
+	s.Cron("* */12 * * *").Do(powerScheduler.TurnOnPlugs)
 	s.StartAsync()
 }

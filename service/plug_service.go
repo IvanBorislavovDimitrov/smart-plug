@@ -87,6 +87,7 @@ func (ps *PlugService) UpdatePlug(ctx context.Context, plug *model.Plug) error {
 func (ps *PlugService) ListPlugs(ctx context.Context, page, perPage int) ([]*model.Plug, error) {
 	poolCon, err := ps.pool.Acquire(context.Background())
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	defer poolCon.Release()
