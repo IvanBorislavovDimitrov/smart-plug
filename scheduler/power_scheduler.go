@@ -69,12 +69,18 @@ func (ps *PowerScheduler) reconcilePlugState(plug *model.Plug, wg *sync.WaitGrou
 	if power <= plug.PowerToTurnOff {
 		log.Println(fmt.Sprintf("Turning off plug: %s", plug.Name))
 		err = plugclient.TurnOffPlug(*plug)
-		plug.State = "OFF"
-		ps.plugService.UpdatePlug(context.Background(), plug)
 		if err != nil {
-			log.Println("Could not reconcile state of the plug. Error updating plug!", err)
-			return
+			log.Println("Error while turning on plug: ", err)
 		}
+		plug.State = "OFF"
+	} else {
+		log.Println(fmt.Sprintf("Updating DB state. Plug in turned on: %s", plug.Name))
+		plug.State = "ON"
+	}
+	err = ps.plugService.UpdatePlug(context.Background(), plug)
+	if err != nil {
+		log.Println("Could not reconcile state of the plug. Error updating plug!", err)
+		return
 	}
 	plugChannel <- plug
 }
