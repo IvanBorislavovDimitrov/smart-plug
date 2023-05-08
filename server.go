@@ -8,14 +8,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-co-op/gocron"
-	"github.com/jackc/pgx/v5/pgxpool"
-
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/IvanBorislavovDimitrov/smart-charger/graph"
 	"github.com/IvanBorislavovDimitrov/smart-charger/scheduler"
 	"github.com/IvanBorislavovDimitrov/smart-charger/service"
+	"github.com/go-co-op/gocron"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const defaultPort = "8081"
@@ -30,7 +29,7 @@ func main() {
 	if connStr == "" {
 		connStr = defaultConnStr
 	}
-	fmt.Println(connStr)
+	fmt.Println("DB connection string: " + connStr)
 	pool, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
 		panic(err)

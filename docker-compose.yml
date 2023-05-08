@@ -3,17 +3,25 @@ services:
   app:
     container_name: smart_plug
     build: .
-    network_mode: bridge
     ports:
       - 8081:8081
-    restart: on-failure
+    restart: on-failure      
     volumes:
       - .:/app
     depends_on:
       - postgresdb
+    networks:
+      - plug_network
 
   postgresdb:
     container_name: postgres_container
     build: ./postgres/
     ports:
       - '5433:5432'
+    networks:
+      - plug_network
+
+# Networks to be created to facilitate communication between containers
+networks:
+  plug_network:
+    driver: bridge
