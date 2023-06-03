@@ -47,6 +47,7 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	Mutation struct {
 		CreatePlug func(childComplexity int, input model.NewPlug) int
+		UpdatePlug func(childComplexity int, input model.UpdatedPlug) int
 	}
 
 	Plug struct {
@@ -65,6 +66,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreatePlug(ctx context.Context, input model.NewPlug) (*model.Plug, error)
+	UpdatePlug(ctx context.Context, input model.UpdatedPlug) (*model.Plug, error)
 }
 type QueryResolver interface {
 	ListPlugs(ctx context.Context, page *int, perPage *int) ([]*model.Plug, error)
@@ -96,6 +98,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreatePlug(childComplexity, args["input"].(model.NewPlug)), true
+
+	case "Mutation.updatePlug":
+		if e.complexity.Mutation.UpdatePlug == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updatePlug_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdatePlug(childComplexity, args["input"].(model.UpdatedPlug)), true
 
 	case "Plug.createdAt":
 		if e.complexity.Plug.CreatedAt == nil {
@@ -160,6 +174,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputNewPlug,
+		ec.unmarshalInputUpdatedPlug,
 	)
 	first := true
 
@@ -246,6 +261,21 @@ func (ec *executionContext) field_Mutation_createPlug_args(ctx context.Context, 
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNNewPlug2githubᚗcomᚋIvanBorislavovDimitrovᚋsmartᚑchargerᚋgraphᚋmodelᚐNewPlug(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updatePlug_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UpdatedPlug
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUpdatedPlug2githubᚗcomᚋIvanBorislavovDimitrovᚋsmartᚑchargerᚋgraphᚋmodelᚐUpdatedPlug(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -394,6 +424,75 @@ func (ec *executionContext) fieldContext_Mutation_createPlug(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createPlug_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updatePlug(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updatePlug(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdatePlug(rctx, fc.Args["input"].(model.UpdatedPlug))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Plug)
+	fc.Result = res
+	return ec.marshalNPlug2ᚖgithubᚗcomᚋIvanBorislavovDimitrovᚋsmartᚑchargerᚋgraphᚋmodelᚐPlug(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updatePlug(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Plug_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Plug_name(ctx, field)
+			case "ipAddress":
+				return ec.fieldContext_Plug_ipAddress(ctx, field)
+			case "powerToTurnOff":
+				return ec.fieldContext_Plug_powerToTurnOff(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Plug_createdAt(ctx, field)
+			case "state":
+				return ec.fieldContext_Plug_state(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Plug", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updatePlug_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -2679,6 +2778,58 @@ func (ec *executionContext) unmarshalInputNewPlug(ctx context.Context, obj inter
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdatedPlug(ctx context.Context, obj interface{}) (model.UpdatedPlug, error) {
+	var it model.UpdatedPlug
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "name", "ipAddress", "powerToTurnOff"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "ipAddress":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ipAddress"))
+			it.IPAddress, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "powerToTurnOff":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("powerToTurnOff"))
+			it.PowerToTurnOff, err = ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -2710,6 +2861,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createPlug(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updatePlug":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updatePlug(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {
@@ -3295,6 +3455,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
+func (ec *executionContext) unmarshalNUpdatedPlug2githubᚗcomᚋIvanBorislavovDimitrovᚋsmartᚑchargerᚋgraphᚋmodelᚐUpdatedPlug(ctx context.Context, v interface{}) (model.UpdatedPlug, error) {
+	res, err := ec.unmarshalInputUpdatedPlug(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
 	return ec.___Directive(ctx, sel, &v)
 }
@@ -3572,6 +3737,22 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v interface{}) (*float64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalFloatContext(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel ast.SelectionSet, v *float64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalFloatContext(*v)
+	return graphql.WrapContextMarshaler(ctx, res)
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {

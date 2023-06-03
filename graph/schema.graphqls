@@ -17,6 +17,13 @@ input NewPlug {
   powerToTurnOff: Float!
 }
 
+input UpdatedPlug {
+  id: ID!
+  name: String
+  ipAddress: String
+  powerToTurnOff: Float
+}
+
 type Query {
   # TODO: add a wrapper to show number of pages...
   listPlugs(page: Int, perPage: Int): [Plug!]!
@@ -24,4 +31,5 @@ type Query {
 
 type Mutation {
   createPlug(input: NewPlug!): Plug!
+  updatePlug(input: UpdatedPlug!): Plug!
 }

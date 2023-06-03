@@ -9,6 +9,7 @@ import (
 	"github.com/IvanBorislavovDimitrov/smart-charger/graph/model"
 	plugclient "github.com/IvanBorislavovDimitrov/smart-charger/plug_client"
 	"github.com/IvanBorislavovDimitrov/smart-charger/service"
+	service_model "github.com/IvanBorislavovDimitrov/smart-charger/service/model"
 )
 
 type PowerScheduler struct {
@@ -39,7 +40,7 @@ func (ps *PowerScheduler) listPlugs(page int) []*model.Plug {
 	if err != nil {
 		log.Fatal("Error while listing plugs", err)
 	}
-	return plugs
+	return service_model.FromServiceModelPlugsToPlugs(plugs)
 }
 
 func (ps *PowerScheduler) reconcilePlugsBatch(plugs []*model.Plug) {
@@ -77,12 +78,13 @@ func (ps *PowerScheduler) reconcilePlugState(plug *model.Plug, wg *sync.WaitGrou
 		log.Println(fmt.Sprintf("Updating DB state. Plug in turned on: %s", plug.Name))
 		plug.State = "ON"
 	}
-	err = ps.plugService.UpdatePlug(context.Background(), plug)
+	serviceModelPlug, err := ps.plugService.UpdatePlug(context.Background(), service_model.ToServiceModelPlugFromPlug(*plug))
 	if err != nil {
 		log.Println("Could not reconcile state of the plug. Error updating plug!", err)
 		return
 	}
-	plugChannel <- plug
+	updatedPlug := service_model.FromServiceModelPlugToPlug(*serviceModelPlug)
+	plugChannel <- &updatedPlug
 }
 
 func (ps *PowerScheduler) TurnOnPlugs() {
@@ -121,10 +123,11 @@ func (ps *PowerScheduler) turnOnPlug(plug *model.Plug, wg *sync.WaitGroup, plugC
 		return
 	}
 	plug.State = "ON"
-	err = ps.plugService.UpdatePlug(context.Background(), plug)
+	serviceModelPlug, err := ps.plugService.UpdatePlug(context.Background(), service_model.ToServiceModelPlugFromPlug(*plug))
 	if err != nil {
 		log.Println("Could not update plug", err)
 		return
 	}
-	plugChannel <- plug
+	updatedPlug := service_model.FromServiceModelPlugToPlug(*serviceModelPlug)
+	plugChannel <- &updatedPlug
 }

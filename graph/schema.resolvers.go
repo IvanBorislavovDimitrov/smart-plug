@@ -8,11 +8,27 @@ import (
 	"context"
 
 	"github.com/IvanBorislavovDimitrov/smart-charger/graph/model"
+	service_model "github.com/IvanBorislavovDimitrov/smart-charger/service/model"
 )
 
 // CreatePlug is the resolver for the createPlug field.
 func (r *mutationResolver) CreatePlug(ctx context.Context, input model.NewPlug) (*model.Plug, error) {
-	return r.plugService.AddPlug(context.Background(), input)
+	serviceModelPlug, err := r.plugService.AddPlug(ctx, service_model.ToServiceModelPlugFromNewPlug(input))
+	if err != nil {
+		return nil, err
+	}
+	plug := service_model.FromServiceModelPlugToPlug(*serviceModelPlug)
+	return &plug, nil
+}
+
+// UpdatePlug is the resolver for the updatePlug field.
+func (r *mutationResolver) UpdatePlug(ctx context.Context, input model.UpdatedPlug) (*model.Plug, error) {
+	serviceModelPlug, err := r.plugService.UpdatePlug(ctx, service_model.ToServiceModelPlugFromUpdatedPlug(input))
+	if err != nil {
+		return nil, err
+	}
+	plug := service_model.FromServiceModelPlugToPlug(*serviceModelPlug)
+	return &plug, nil
 }
 
 // ListPlugs is the resolver for the listPlugs field.
@@ -25,7 +41,16 @@ func (r *queryResolver) ListPlugs(ctx context.Context, page *int, perPage *int) 
 	if perPage != nil {
 		caclPerPage = *perPage
 	}
-	return r.plugService.ListPlugs(context.Background(), calcPage, caclPerPage)
+	serviceModelPlugs, err := r.plugService.ListPlugs(ctx, calcPage, caclPerPage)
+	if err != nil {
+		return nil, err
+	}
+	var plugs []*model.Plug
+	for _, serviceModelPlug := range serviceModelPlugs {
+		plug := service_model.FromServiceModelPlugToPlug(*serviceModelPlug)
+		plugs = append(plugs, &plug)
+	}
+	return plugs, nil
 }
 
 // Mutation returns MutationResolver implementation.

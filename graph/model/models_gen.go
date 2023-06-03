@@ -16,3 +16,10 @@ type Plug struct {
 	CreatedAt      string  `json:"createdAt"`
 	State          string  `json:"state"`
 }
+
+type UpdatedPlug struct {
+	ID             string   `json:"id"`
+	Name           *string  `json:"name,omitempty"`
+	IPAddress      *string  `json:"ipAddress,omitempty"`
+	PowerToTurnOff *float64 `json:"powerToTurnOff,omitempty"`
+}
