@@ -31,6 +31,11 @@ func (r *mutationResolver) UpdatePlug(ctx context.Context, input model.UpdatedPl
 	return &plug, nil
 }
 
+// DeletePlug is the resolver for the deletePlug field.
+func (r *mutationResolver) DeletePlug(ctx context.Context, id string) (int, error) {
+	return r.plugService.DeletePlug(ctx, id)
+}
+
 // ListPlugs is the resolver for the listPlugs field.
 func (r *queryResolver) ListPlugs(ctx context.Context, page *int, perPage *int) ([]*model.Plug, error) {
 	calcPage := 1

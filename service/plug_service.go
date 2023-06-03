@@ -170,3 +170,32 @@ func readPlug(row pgx.Row) (*service_model.Plug, error) {
 		State:          state,
 	}, nil
 }
+
+func (ps *PlugService) DeletePlug(ctx context.Context, id string) (int, error) {
+	poolConn, err := ps.pool.Acquire(ctx)
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+	defer poolConn.Release()
+	conn := poolConn.Conn()
+	defer conn.Close(ctx)
+	transaction, err := conn.Begin(ctx)
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+	commandTag, err := transaction.Exec(ctx, "DELETE FROM plugs where id = $1", id)
+	if err != nil {
+		log.Println(err)
+		transaction.Rollback(ctx)
+		return 0, err
+	}
+
+	transaction.Commit(ctx)
+	if err != nil {
+		log.Println(err)
+		return 0, err
+	}
+	return int(commandTag.RowsAffected()), nil
+}
