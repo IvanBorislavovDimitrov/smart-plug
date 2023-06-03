@@ -1,6 +1,7 @@
 version: '3.9'
 services:
   app:
+    network_mode: host
     container_name: smart_plug
     build: .
     ports:
@@ -10,18 +11,12 @@ services:
       - .:/app
     depends_on:
       - postgresdb
-    networks:
-      - plug_network
+
 
   postgresdb:
     container_name: postgres_container
     build: ./postgres/
     ports:
       - '5433:5432'
-    networks:
-      - plug_network
 
-# Networks to be created to facilitate communication between containers
-networks:
-  plug_network:
-    driver: bridge
+

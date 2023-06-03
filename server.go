@@ -18,7 +18,7 @@ import (
 )
 
 const defaultPort = "8081"
-const defaultConnStr = "postgresql://postgres:123@localhost:5432/smart_plug?sslmode=disable"
+const defaultConnStr = "postgresql://vanko:123@localhost:5432/smart_plug?sslmode=disable"
 
 func main() {
 	port := os.Getenv("PORT")
@@ -49,8 +49,8 @@ func main() {
 func startPowerScheduler(plugService *service.PlugService) {
 	powerScheduler := scheduler.NewPowerScheduler(plugService)
 	s := gocron.NewScheduler(time.Local)
-	log.Println("Scheduler was configured for every 12 hours")
+	log.Println("Scheduler was configured to start every 12 hours")
 	s.Cron("*/15 * * * *").Do(powerScheduler.ReconcilePlugsStates)
-	s.Cron("1 */9 * * *").Do(powerScheduler.TurnOnPlugs)
+	s.Cron("1 */12* * *").Do(powerScheduler.TurnOnPlugs)
 	s.StartAsync()
 }
