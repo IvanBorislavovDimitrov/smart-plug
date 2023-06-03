@@ -3,6 +3,7 @@ Smart Plug is a microservice that turns on/off and monitors smart plugs "Shelly"
 
 The server uses GraphQL for its API.
 
+GraphQL API path: "/graphql/plugs"
 ## To add a new plug for monitoring use the following query
 ```
 mutation CreatePlug {
