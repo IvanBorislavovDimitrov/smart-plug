@@ -31,4 +31,4 @@ RUN go build -o /build
 EXPOSE 8081
 
 # Run the executable
-CMD [ "go" "run" "server.go" ]
+CMD [ "./run.sh" ]
