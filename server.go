@@ -51,6 +51,6 @@ func startPowerScheduler(plugService *service.PlugService) {
 	s := gocron.NewScheduler(time.Local)
 	log.Println("Scheduler was configured to start every 12 hours")
 	s.Cron("*/15 * * * *").Do(powerScheduler.ReconcilePlugsStates)
-	s.Cron("1 */12* * *").Do(powerScheduler.TurnOnPlugs)
+	s.Cron("1 */12 * * *").Do(powerScheduler.TurnOnPlugs)
 	s.StartAsync()
 }
